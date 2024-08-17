@@ -5,6 +5,7 @@ Registration
 {% endblock %}
 
 {% block main %}
+<h1 class="mb-3">Register an Account</h1>
 <form action="/register" method="post">
     <div class="mb-3">
         <input autocomplete="off" autofocus class="form-control mx-auto w-auto" name="username" placeholder="Username"
@@ -17,6 +18,10 @@ Registration
     <div class="mb-3">
         <input autocomplete="off" class="form-control mx-auto w-auto" name="confirmation" placeholder="Re-type Password"
             type="password" required>
+    </div>
+    <div class="mb-3">
+        <span>Already have an account?</span>
+        <a href="{{ url_for('login') }}">Login</a>
     </div>
     <button class="btn btn-primary" type="submit">Register</button>
 </form>

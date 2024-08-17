@@ -1,8 +1,23 @@
 .navbar {
-    height: 120px;
+    height: 100px;
 }
 
 .navbar-brand {
     font-size: 3rem;
     margin-left: 150px;
+}
+
+.alert.error {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.alert.success {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.alert.info {
+    background-color: #d1ecf1;
+    color: #0c5460;
 }

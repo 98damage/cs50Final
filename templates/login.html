@@ -5,5 +5,20 @@ Login
 {% endblock %}
 
 {% block main %}
-
+<h1 class="mb-3">Login to your Account</h1>
+<form action="/login" method="post">
+    <div class="mb-3">
+        <input autocomplete="off" autofocus class="form-control mx-auto w-auto" name="username" placeholder="Username"
+            type="text" required>
+    </div>
+    <div class="mb-3">
+        <input autocomplete="off" class="form-control mx-auto w-auto" name="password" placeholder="Password"
+            type="password" required>
+    </div>
+    <div class="mb-3">
+        <span>Don't have an account?</span>
+        <a href="{{ url_for('register') }}">Register</a>
+    </div>
+    <button class="btn btn-primary" type="submit">Login</button>
+</form>
 {% endblock %}
