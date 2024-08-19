@@ -1,0 +1,15 @@
+{% extends "layout.html" %}
+
+{% block title %}
+Account
+{% endblock %}
+
+{% block main %}
+<div class="container-md container-style" style="width: 60%;">
+    <h1 class="m-2">Account Settings</h1>
+    <a class="btn btn-info m-3" href="{{ url_for('survey') }}" type="button">Survey</a>
+
+    <!--Add more anchor rags (buttons) later for password changes etc-->
+
+</div>
+{% endblock %}

@@ -105,7 +105,14 @@ def register():
         return render_template("register.html")
 
 
-@app.route("/survey", methods=['GET', 'POST'])
+@app.route("/account", methods=['GET', 'POST'])
+@login_required
+def account():
+
+    return render_template('account.html')
+
+
+@app.route("/account/survey", methods=['GET', 'POST'])
 @login_required
 def survey():
 
