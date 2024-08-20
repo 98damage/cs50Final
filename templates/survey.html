@@ -6,6 +6,41 @@ Survey
 
 {% block main %}
 <div class="container-md container-style">
+    <h1 class="mb-2">Dietary Survey</h1>
+    <h2 class="mb-2">Please tell us some information about yourself</h2>
+    <br>
+    <div class="form-check text-start">
+        <form action="{{ url_for('survey') }}" method="POST">
+            <h3 class="m-1">Dietary Requirements</h3>
+            <!--<label for="dietaryReq">Dietary Requirements</label>-->
+            {% for condition in dietary_requirements %}
+            <label class="form-check-label fs-4 me-4 mb-2">
+                <input type="checkbox" id="{{ condition }}" name="dietaryChoices" value="{{ condition }}">
+                {{ condition }}
+            </label>
+            {% endfor %}
+            <br><br><br>
 
+            <h3 class="m-1">Favourite Cuisines</h3>
+            {% for cuisine in cuisines %}
+            <label class="form-check-label fs-4 me-4 mb-2">
+                <input type="checkbox" id="{{ cuisine }}" name="cuisineChoices" value="{{ cuisine }}">
+                {{ cuisine }}
+            </label>
+            {% endfor %}
+            <br><br><br>
+
+            <h3 class="m-1">Number of Servings</h3>
+            <label class="form-label fs-4 mb-2 d-inline-flex align-items-center">
+                <input type="range" class="form-range" id="servings" min="2" max="8" value="4" name="servings"
+                    oninput="this.nextElementSibling.value = this.value">
+                <output class="ms-4">4</output>
+            </label>
+            <!--Submit button in bottom RHS corner-->
+            <div class="d-grid gap-2 m-4">
+                <button type="submit" class="btn btn-lg btn-primary">Submit</button>
+            </div>
+        </form>
+    </div>
 </div>
 {% endblock %}

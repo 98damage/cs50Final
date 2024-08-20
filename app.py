@@ -1,5 +1,5 @@
 import os
-
+import json
 from cs50 import SQL
 from flask import Flask, flash, redirect, render_template, request, session, url_for
 from flask_session import Session
@@ -97,7 +97,6 @@ def register():
         db.execute('INSERT INTO users (username, hash) VALUES(?,?)', userReg, generate_password_hash(passReg, method='pbkdf2', salt_length=16))
 
         flash('Successfully Registered!', 'success')
-        print(session)
 
         return redirect(url_for('login')) # redirect user to SURVEY??? ############# FIX THIS #####################
     
@@ -115,10 +114,96 @@ def account():
 @app.route("/account/survey", methods=['GET', 'POST'])
 @login_required
 def survey():
+    # create list of dietary requirements to send to html through jinja
+    dietary_requirements = [
+        'Vegetarian',
+        'Vegan',
+        'Pescatarian',
+        'Gluten-Free',
+        'Dairy-Free',
+        'Nut-Free',
+        'Egg-Free',
+        'Keto',
+        'Paleo'
+    ]
 
-    if request.method == 'POST': # user completes the survey
+    cuisines = [
+        'Italian',
+        'Mexican',
+        'Chinese',
+        'Indian',
+        'Japanese',
+        'Greek',
+        'Lebanese',
+        'Vietnamese',
+        'Turkish',
+        'Korean',
+        'Middle Eastern',
+        'American',
+        'Australian',
+        'Moroccan',
+        'Spanish',
+        'Caribbean',
+        'Mediterranean'
+    ]
 
-        return redirect("/")
+    if request.method == 'POST': # user completes the survey - save data to DB
+
+        # get survey form data from user input
+        selectedDietary = request.form.getlist('dietaryChoices')
+        selectedCuisines = request.form.getlist('cuisineChoices')
+        selectedServings = int(request.form.get('servings'))
+
+        # validate HTML form 'values=""' have not been tampered with
+        for item in selectedDietary:
+            if item not in dietary_requirements:
+                flash("Invalid Form Response", 'error')
+                return redirect(url_for('survey'))
+            
+        for item in selectedCuisines:
+            if item not in cuisines:
+                flash('Invalid Form Response', 'error')
+                return redirect(url_for('survey'))
+            
+        if selectedServings < 2 or selectedServings > 8:
+            flash('Invalid Form Response', 'error')
+            return redirect(url_for('survey'))
+
+        # convert lists to JSON for SQL storage
+        selectedDietary_json = json.dumps(selectedDietary)
+        selectedCuisines_json = json.dumps(selectedCuisines)
+
+        # if user has not selected at least one option from each question
+        if not selectedCuisines or not selectedDietary or not selectedServings:
+            flash('Please list at least one option for each question', 'error')
+            return render_template('survey.html', dietary_requirements=dietary_requirements, cuisines=cuisines)
+        
+        # find user survey record
+        userSurveyData = db.execute('SELECT * FROM survey WHERE userid=?', session['user_id'])
+
+        # if record is empty, INSERT data into table
+        if not userSurveyData:
+            db.execute('INSERT INTO survey (cuisine, dietary, servings, userid) VALUES (?,?,?,?)', 
+                       selectedCuisines_json, selectedDietary_json, selectedServings, session['user_id'])
+
+        else:
+            db.execute('UPDATE survey SET cuisine=?, dietary=?, servings=? WHERE userid=?', 
+                       selectedCuisines_json, selectedDietary_json, selectedServings, session['user_id'])
+
+        flash('New survey information recorded', 'info')
+        return redirect(url_for('survey'))
     
     else:
-        return render_template("survey.html")
+        return render_template("survey.html", dietary_requirements=dietary_requirements, cuisines=cuisines)
+    
+
+@app.route("/generate", methods=['GET', 'POST'])
+@login_required
+def generate():
+
+    if request.method == 'POST':
+        return redirect(url_for('generate'))
+    
+    else:
+        return render_template('generate.html')
+        

@@ -27,3 +27,7 @@
     border-color: black;
     background-color: #f0f8ff;
 }
+
+.container-title {
+    justify-content: left;
+}
