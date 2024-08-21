@@ -6,6 +6,46 @@ Recipe Generation
 
 {% block main %}
 <div class="container-md container-style">
-    Hi
+    <!--Add if statment checking whether recipes have been generated to determine what to display-->
+    <h1 class="mb-2">Generate Weekly Recipes</h1>
+    <h2 class="mb-2">Simply press the generate button below</h2>
 </div>
+
+{% if userDb_data[0]['titles_generated'] %}
+<!--only visible after recipes have been generated-->
+<div class="recipe-container">
+    {% for recipe in recipes_db %}
+    <div class="card text-start recipe-card">
+        <div class="card-header">
+            {{ recipe['cuisine'] }}
+        </div>
+        <div class="card-body">
+            <h5 class="card-title">{{ recipe['title'] }}</h5>
+            <p class="card-text">{{ recipe['meal_type'] }}</p>
+            <button type="button" class="btn btn-sm btn-primary">Add</button>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!--DISPLAY CARDS WHICH MAKE METHODS VISIBLE USING JINJA IF?-->
+
+{% else %}
+<!--only visible before recipes have been generated-->
+<div class="container text-start m-4">
+    <img src="/static/indianCurry.jpg" alt="Indian Curry" width="300" height="300">
+    <img src="/static/americanBurger.jpg" alt="American Burger" width="300" height="300">
+    <img src="/static/japaneseFood.jpg" alt="Japanese Meal" width="300" height="300">
+    <img src="/static/breakfast.jpg" alt="Breakfast" width="300" height="300">
+</div>
+
+<div class="d-grid gap-2 m-4">
+    <form action="{{ url_for('generate') }}" method="post">
+        <button class="btn btn-lg btn-primary" type="submit">Generate Recipes</button>
+    </form>
+</div>
+
+{% endif %}
+
+<!--IF RECIPES HAVE BEEN GENERATED BUT WEEKLY PLAN NOT CREATED-->
 {% endblock %}

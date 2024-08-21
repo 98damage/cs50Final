@@ -31,3 +31,15 @@
 .container-title {
     justify-content: left;
 }
+
+.recipe-card {
+    width: 18rem;
+}
+
+.recipe-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    justify-content: flex-start;
+    padding: 16px;
+}
