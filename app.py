@@ -211,20 +211,17 @@ def generate():
     # code to display user recipe titles if they exist
     userDb_data = db.execute('SELECT titles_generated, methods_generated FROM users WHERE id=?', session['user_id'])
     recipeDb_data = db.execute('SELECT * FROM recipes WHERE user_id=?', session['user_id'])
+    survey_userData = db.execute('SELECT * FROM survey WHERE userid=?', session['user_id'])
 
     if request.method == 'POST':
-
-        # checks if user has completed survey (must take inputs from user survey)
-        survey_userData = db.execute('SELECT * FROM survey WHERE userid=?', session['user_id'])
-
-        # If user hasn't completed survey == ERROR
         if not survey_userData:
             flash("Please complete the survey under /account/survey", "error")
             return redirect(url_for('generate'))
         
         # user has previously generated the titles of 14 recipes and has not yet selected the recipes to cook
         if userDb_data[0]['titles_generated']:
-            return render_template('generate.html', recipeDb_data=recipeDb_data, userDb_data=userDb_data)
+            print("here")
+            return redirect(url_for('generate'))
 
         # user has selected their 7 recipes for the week, redirect to weekly plan
         if userDb_data[0]['methods_generated']:
@@ -232,39 +229,58 @@ def generate():
         
         # if titles haven't been generated and the methods haven't been generated (both FALSE), generate 14 recipes
         elif not userDb_data[0]['titles_generated'] and not userDb_data[0]['methods_generated']:
-            title_prompt_input = (
-                "Generate 14 unique recipe titles that adhere to the following criteria:\n\n"
-                f"The recipes should match the following dietary requirements: {json.loads(survey_userData[0]['dietary'])}.\n"
-                f"The recipes should be based on the following cuisine(s): {json.loads(survey_userData[0]['cuisine'])}.\n"
-                f"Each recipe should be designed to serve {survey_userData[0]['servings']} people.\n"
-                "For each recipe, indicate whether it is best suited for breakfast, lunch, or dinner.\n"
-                "Please return only the JSON array of objects and not even the quotation marks at the start or end of the output where each object contains three fields: "
-                "'title' (the recipe title), 'cuisine' (the meals cuisine) and 'meal_type' (the corresponding meal type: breakfast, lunch, or dinner), and nothing else."
-                )
 
-            # send openai API request & store the content as json within recipes variable
-            api_response = call_openai_api(title_prompt_input)
-            recipes = json.loads(api_response['choices'][0]['message']['content'])
+            recipes = generate_recipe_titles(survey_userData)
+            
+            if recipes:
+                # load individual recipes into recipes database
+                for recipe in recipes:
+                    db.execute('INSERT INTO recipes (title, meal_type, cuisine, user_id) VALUES(?,?,?,?)', 
+                            recipe['title'], recipe['meal_type'], recipe['cuisine'], session['user_id'])
+                
 
-            # load individual recipes into recipes database
-            for recipe in recipes:
-                db.execute('INSERT INTO recipes (title, meal_type, cuisine, user_id) VALUES(?,?,?,?)', 
-                           recipe['title'], recipe['meal_type'], recipe['cuisine'], session['user_id'])
-
-            # update users DB so that we know they have generated 14 recipes previously
-            db.execute('UPDATE users SET titles_generated=? WHERE id=?', True, session['user_id'])
-            userDb_data = db.execute('SELECT titles_generated, methods_generated FROM users WHERE id=?', session['user_id'])
-            recipes_db = db.execute('SELECT title, cuisine, meal_type FROM recipes WHERE user_id=?', session['user_id'])
-            return render_template('generate.html', recipes_db=recipes_db, userDb_data=userDb_data)
+                # update users DB so that we know they have generated 14 recipes previously
+                db.execute('UPDATE users SET titles_generated=? WHERE id=?', True, session['user_id'])
+                userDb_data = db.execute('SELECT titles_generated, methods_generated FROM users WHERE id=?', session['user_id'])
+                recipes_db = db.execute('SELECT id, title, cuisine, meal_type FROM recipes WHERE user_id=?', session['user_id'])
+                return render_template('generate.html', recipes_db=recipes_db, userDb_data=userDb_data)
+            else:
+                flash("Error generating recipes, try again", "error")
+                return redirect(url_for('generate'))
 
         #methodIngredient_prompt = ("")
 
         return render_template('generate.html')
     
     else:
-        recipes_db = db.execute('SELECT title, cuisine, meal_type FROM recipes WHERE user_id=?', session['user_id'])
+        recipes_db = db.execute('SELECT id, title, cuisine, meal_type FROM recipes WHERE user_id=?', session['user_id'])
         return render_template('generate.html', userDb_data=userDb_data, recipes_db=recipes_db)
         
+
+def generate_recipe_titles(survey_userData):
+    title_prompt_input = (
+        "Generate 14 unique recipe titles that adhere to the following criteria:\n\n"
+        f"The recipes should match the following dietary requirements: {json.loads(survey_userData[0]['dietary'])}.\n"
+        f"The recipes should be based on the following cuisine(s): {json.loads(survey_userData[0]['cuisine'])}.\n"
+        f"Each recipe should be designed to serve {survey_userData[0]['servings']} people.\n"
+        "For each recipe, indicate whether it is best suited for breakfast, lunch, or dinner.\n"
+        "Please return only the JSON array of objects and not even the quotation marks at the start or end of the output where each object contains three fields: "
+        "'title' (the recipe title), 'cuisine' (the meals cuisine) and 'meal_type' (the corresponding meal type: breakfast, lunch, or dinner), and nothing else."
+        )
+
+    # send openai API request & store the content as json within recipes variable
+    try:
+        api_response = call_openai_api(title_prompt_input)
+        recipes = json.loads(api_response['choices'][0]['message']['content'])
+        return recipes
+    except Exception as e:
+        flash("Error generating recipes. Please try again", "error")
+        return None
+
+
+def generate_recipe_methods(recipe_title_input):
+    return redirect("/")
+
 
 def call_openai_api(prompt):
     url = "https://api.openai.com/v1/chat/completions"
