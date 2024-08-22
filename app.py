@@ -210,18 +210,29 @@ def survey():
 def generate():
     # code to display user recipe titles if they exist
     userDb_data = db.execute('SELECT titles_generated, methods_generated FROM users WHERE id=?', session['user_id'])
-    recipeDb_data = db.execute('SELECT * FROM recipes WHERE user_id=?', session['user_id'])
-    survey_userData = db.execute('SELECT * FROM survey WHERE userid=?', session['user_id'])
 
     if request.method == 'POST':
+        survey_userData = db.execute('SELECT * FROM survey WHERE userid=?', session['user_id'])
         if not survey_userData:
             flash("Please complete the survey under /account/survey", "error")
             return redirect(url_for('generate'))
         
-        # user has previously generated the titles of 14 recipes and has not yet selected the recipes to cook
+        # get method & ingredients lists for user
         if userDb_data[0]['titles_generated']:
-            print("here")
-            return redirect(url_for('generate'))
+            selected_recipe_id = json.loads(request.form.get('selected-recipes')) # convert string to list
+
+            recipe_list = select_recipes(selected_recipe_id) # USE recipe_list in generate_methods function!!!
+            
+            recipe_methods = generate_recipe_methods(recipe_list)
+
+            #db.execute('INSERT INTO added_recipes (title, meal_type, cuisine) VALUES')
+
+            # delete data from recipes table once methods/ingredients have been chosen
+            #db.execute('DELETE FROM recipes WHERE user_id=?', session['user_id'])
+            #db.execute('UPDATE users SET titles_generated=0')
+
+            # display users weekly recipe plan
+            return redirect("/") 
 
         # user has selected their 7 recipes for the week, redirect to weekly plan
         if userDb_data[0]['methods_generated']:
@@ -257,6 +268,19 @@ def generate():
         return render_template('generate.html', userDb_data=userDb_data, recipes_db=recipes_db)
         
 
+def select_recipes(recipe_id): # Parse selected recipe ids to DB to get title, meal_type & cuisine data for method generation function
+    #print(selected_recipe_id)
+    recipe_list = []
+
+    for id in recipe_id:
+        #print(id)
+        recipe = db.execute('SELECT title, meal_type, cuisine FROM recipes WHERE user_id=? AND id=?', session['user_id'], id)
+        if recipe:
+            recipe_list.append(recipe[0])
+
+    return recipe_list
+
+
 def generate_recipe_titles(survey_userData):
     title_prompt_input = (
         "Generate 14 unique recipe titles that adhere to the following criteria:\n\n"
@@ -278,8 +302,19 @@ def generate_recipe_titles(survey_userData):
         return None
 
 
-def generate_recipe_methods(recipe_title_input):
-    return redirect("/")
+def generate_recipe_methods(recipes_input):
+
+    method_prompt_input = (
+        # Add string_generated methods/ingredients prompt here
+    )
+
+    try:
+        api_response = call_openai_api(method_prompt_input)
+        recipes = json.loads(api_response['choices'][0]['message']['content'])
+        return recipes
+    except Exception as e:
+        flash("Error generating data. Please try again", "error")
+        return None
 
 
 def call_openai_api(prompt):
