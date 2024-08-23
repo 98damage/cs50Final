@@ -222,8 +222,9 @@ def generate():
             selected_recipe_id = json.loads(request.form.get('selected-recipes')) # convert string to list
 
             recipe_list = select_recipes(selected_recipe_id) # USE recipe_list in generate_methods function!!!
-            
-            recipe_methods = generate_recipe_methods(recipe_list)
+            recipe_methods = generate_recipe_methods(recipe_list, survey_userData)
+            print(recipe_methods[0]['title'])
+            print(recipe_methods[0]['ingredients'])
 
             #db.execute('INSERT INTO added_recipes (title, meal_type, cuisine) VALUES')
 
@@ -251,7 +252,6 @@ def generate():
                 
 
                 # update users DB so that we know they have generated 14 recipes previously
-                db.execute('UPDATE users SET titles_generated=? WHERE id=?', True, session['user_id'])
                 userDb_data = db.execute('SELECT titles_generated, methods_generated FROM users WHERE id=?', session['user_id'])
                 recipes_db = db.execute('SELECT id, title, cuisine, meal_type FROM recipes WHERE user_id=?', session['user_id'])
                 return render_template('generate.html', recipes_db=recipes_db, userDb_data=userDb_data)
@@ -296,24 +296,41 @@ def generate_recipe_titles(survey_userData):
     try:
         api_response = call_openai_api(title_prompt_input)
         recipes = json.loads(api_response['choices'][0]['message']['content'])
+        db.execute('UPDATE users SET titles_generated=?, methods_generated=? WHERE id=?', True, False, session['user_id'])
         return recipes
     except Exception as e:
         flash("Error generating recipes. Please try again", "error")
+        db.execute('UPDATE users SET titles_generated=?, methods_generated=? WHERE id=?', False, False, session['user_id'])
         return None
 
 
-def generate_recipe_methods(recipes_input):
+def generate_recipe_methods(recipes_input, survey_userData):
 
     method_prompt_input = (
-        # Add string_generated methods/ingredients prompt here
+        "Generate detailed recipes for the following 7 unique recipe titles. Each recipe should include a method and a list of ingredients, adhering to the following criteria:\n\n"
+        f"List of dictionaries including recipe titles and the associated meal types & cuisine of that recipe: {recipes_input}\n"
+        f"Dietary Requirements: The recipes should match the following dietary requirements: {json.loads(survey_userData[0]['dietary'])}.\n"
+        f"Servings: Each recipe should be designed to serve {survey_userData[0]['servings']} people.\n"
+        f"Meal Types: Each recipe should indicate whether it is best suited for breakfast, lunch, or dinner.\n"
+        "For each recipe, return a JSON array of objects where each object contains the following fields:\n"
+        "title (the recipe title),\n"
+        "cuisine (the cuisine of the meal),\n"
+        "meal_type (whether the recipe is best suited for breakfast, lunch, or dinner),\n"
+        "ingredients (a list of ingredients needed for the recipe, with quantities specified),\n"
+        "method (a step-by-step method to prepare the recipe with australian SI system (celsius etc)).\n"
+        "Please ensure the output is formatted as a JSON array of objects and do not include any extraneous text outside of the JSON structure.\n"
+        "Do not even include the quotation marks or the text 'json' at the start or end of the output"
     )
 
     try:
+        print("API call attempt")
         api_response = call_openai_api(method_prompt_input)
         recipes = json.loads(api_response['choices'][0]['message']['content'])
+        db.execute('UPDATE users SET titles_generated=?, methods_generated=? WHERE id=?', False, True, session['user_id'])
         return recipes
     except Exception as e:
-        flash("Error generating data. Please try again", "error")
+        flash("Error generating recipes. Please try again", "error")
+        db.execute('UPDATE users SET titles_generated=?, methods_generated=? WHERE id=?', True, False, session['user_id'])
         return None
 
 
