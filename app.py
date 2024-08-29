@@ -24,14 +24,14 @@ db = SQL("sqlite:///beet.db")
 
 @app.route("/", methods=['GET', 'POST']) # HOMEPAGE (AFTER USER LOGS IN)
 @login_required
-def index():
-    """Home Page once logged in"""
+def weekly_plan():
+    """Weekly Plan Once Logged In"""
     
     if request.method == 'POST':
-        return render_template("layout.html")
+        return render_template("weeklyPlan.html")
     
     else:
-        return render_template("layout.html")
+        return render_template("weeklyPlan.html")
     
 
 @app.route("/login", methods=['GET', 'POST'])
@@ -221,16 +221,26 @@ def generate():
         if userDb_data[0]['titles_generated']:
             selected_recipe_id = json.loads(request.form.get('selected-recipes')) # convert string to list
 
-            recipe_list = select_recipes(selected_recipe_id) # USE recipe_list in generate_methods function!!!
+            recipe_list = select_recipes(selected_recipe_id)
             recipe_methods = generate_recipe_methods(recipe_list, survey_userData)
-            print(recipe_methods[0]['title'])
-            print(recipe_methods[0]['ingredients'])
 
-            #db.execute('INSERT INTO added_recipes (title, meal_type, cuisine) VALUES')
+            # in the off chance the api doesn't work and recipe_methods returns error of NoneType
+            while recipe_methods is None or len(recipe_methods) == 0:
+                recipe_methods = generate_recipe_methods(recipe_list, survey_userData)
+
+            #print(recipe_methods[0])
+            #print(recipe_methods[0]['meal_type'])
+            #print(recipe_methods[0]['ingredients'])
+
+            for recipe in recipe_methods:
+                method_json = json.dumps(recipe['method']) # convert lists to JSON fields for SQL DB
+                ingredients_json = json.dumps(recipe['ingredients'])
+                db.execute('INSERT INTO added_recipes (title, meal_type, cuisine, method, ingredients, user_id) VALUES (?,?,?,?,?,?)', 
+                        recipe['title'], recipe['meal_type'], recipe['cuisine'], method_json, ingredients_json, session['user_id'])
+                print(recipe['title'])
 
             # delete data from recipes table once methods/ingredients have been chosen
-            #db.execute('DELETE FROM recipes WHERE user_id=?', session['user_id'])
-            #db.execute('UPDATE users SET titles_generated=0')
+            db.execute('DELETE FROM recipes WHERE user_id=?', session['user_id'])
 
             # display users weekly recipe plan
             return redirect("/") 
@@ -311,7 +321,7 @@ def generate_recipe_methods(recipes_input, survey_userData):
         f"List of dictionaries including recipe titles and the associated meal types & cuisine of that recipe: {recipes_input}\n"
         f"Dietary Requirements: The recipes should match the following dietary requirements: {json.loads(survey_userData[0]['dietary'])}.\n"
         f"Servings: Each recipe should be designed to serve {survey_userData[0]['servings']} people.\n"
-        f"Meal Types: Each recipe should indicate whether it is best suited for breakfast, lunch, or dinner.\n"
+        "Meal Types: Each recipe should indicate whether it is best suited for breakfast, lunch, or dinner.\n"
         "For each recipe, return a JSON array of objects where each object contains the following fields:\n"
         "title (the recipe title),\n"
         "cuisine (the cuisine of the meal),\n"

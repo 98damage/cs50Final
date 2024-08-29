@@ -43,3 +43,8 @@
     justify-content: flex-start;
     padding: 16px;
 }
+
+.weekly-container {
+    border-style: solid;
+    border-color: black;
+}
