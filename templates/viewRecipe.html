@@ -1,0 +1,31 @@
+{% extends "layout.html" %}
+
+{% block title %}
+Recipe
+{% endblock %}
+
+{% block main %}
+<div class="container-lg container-style">
+    <h1 class="m-5">{{ recipe['title'] }}</h1>
+    <div class="container text-center">
+        <div class="row">
+            <div class="col text-start recipe-col">
+                <h2 class="mb-2">Ingredients</h2>
+                <ul class="list-group list-group-flush">
+                    {% for ingredient in recipe['ingredients'] %}
+                    <li class="list-group-item" style="background-color: #f0f8ff;">{{ ingredient }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <div class="col text-start recipe-col">
+                <h2 class="mb-2">Method</h2>
+                <ol class="list-group list-group-flush list-group-numbered">
+                    {% for step in recipe['method'] %}
+                    <li class="list-group-item" style="background-color: #f0f8ff;">{{ step }}</li>
+                    {% endfor %}
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

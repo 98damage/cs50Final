@@ -5,21 +5,23 @@ Weekly Plan
 {% endblock %}
 
 {% block main %}
-<div class="container text-center">
-    <div class="row weekly-container">
-      <div class="col-sm-3 weekly-container">
-        Monday
+<div class="container-md container-style">
+  <h1 class="mb-2">Recipes for your Week</h1>
+</div>
+<!--Recipe Card Display-->
+
+<div class="recipe-container" style="justify-content: center;">
+{% for recipe in weeklyRecipeCards %}
+    <div class="card text-start recipe-card">
+      <div class="card-header">
+        {{ recipe['cuisine'] }}
       </div>
-      <div class="col-sm-9">
-        <div class="row">
-          <div class="col-8 col-sm-6">
-            Title
-          </div>
-          <div class="col-4 col-sm-6">
-            Button
-          </div>
-        </div>
+      <div class="card-body">
+        <h5 class="card-title">{{ recipe['title'] }}</h5>
+        <p class="card-text">{{ recipe['meal_type'] }}</p>
+        <a class="btn btn-sm btn-primary" href="{{ url_for('view_recipe', recipe_id=recipe['id']) }}">View Recipe</a>
       </div>
     </div>
-  </div>
+{% endfor %}
+</div>
 {% endblock %}

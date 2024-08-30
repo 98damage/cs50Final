@@ -10,23 +10,21 @@
     <link href="/static/styles.css" rel="stylesheet">
 
 
-    <title>Beet:</title> <!-- ADD JINJA TO TITLE (CHANGES DEPENDING ON WHAT PAGE YOURE ON)-->
+    <title>{% block title %}{% endblock %}</title> <!-- ADD JINJA TO TITLE (CHANGES DEPENDING ON WHAT PAGE YOURE ON)-->
 </head>
 
 <header>
-    <nav class="navbar sticky-top navbar-expand-lg" style="background-color: #7ee999;">
+    <nav class="navbar sticky-top navbar-expand-lg" style="background-color: #1abc9c;">
         <div class="container-fluid">
-            <a class="navbar-brand h1" href="/">
+            <a class="navbar-brand h1" href="{{ url_for('weekly_plan') }}">
                 BEET
             </a>
             <div class="collapse navbar-collapse">
                 {% if session.get("user_id") %}
                 <div class="navbar-nav container-fluid">
-                    <a class="nav-link active fs-4" aria-current="page" href="#">Weekly Plan</a>
+                    <a class="nav-link active fs-4" aria-current="page" href="{{ url_for('weekly_plan') }}">Weekly Plan</a>
                     <!--active & aria-current will change depending on what page is selected-->
                     <a class="nav-link fs-4" href="{{ url_for('generate') }}">Generate Recipes</a>
-                    <a class="nav-link fs-4" href="#">Favourites</a>
-                    <a class="nav-link fs-4" href="#">Previous Weeks</a>
                     <!--WRITE SOME JS TO  MAKE 'active' & aria-current change <a> classes-->
                     <!--ADD BURGER MENU BUTTON TO MAKE NAV COLLAPSABLE?-->
                 </div>

@@ -22,17 +22,39 @@ Session(app)
 
 db = SQL("sqlite:///beet.db")
 
-@app.route("/", methods=['GET', 'POST']) # HOMEPAGE (AFTER USER LOGS IN)
+@app.route("/plan", methods=['GET', 'POST']) # HOMEPAGE (AFTER USER LOGS IN)
 @login_required
 def weekly_plan():
     """Weekly Plan Once Logged In"""
+    weeklyRecipeCards = db.execute('SELECT id, title, meal_type, cuisine FROM added_recipes WHERE user_id=?', 
+                               session['user_id'])
     
     if request.method == 'POST':
         return render_template("weeklyPlan.html")
     
-    else:
-        return render_template("weeklyPlan.html")
+    else:        
+        return render_template("weeklyPlan.html", weeklyRecipeCards=weeklyRecipeCards)
     
+
+@app.route("/plan/recipe/<int:recipe_id>", methods=['GET'])
+@login_required
+def view_recipe(recipe_id):
+
+    recipe = db.execute('SELECT title, meal_type, cuisine, method, ingredients FROM added_recipes WHERE id=? AND user_id=?', 
+                        recipe_id, session['user_id'])
+    
+    if recipe:
+        recipe = recipe[0] # simplify keystrokes
+    elif not recipe:
+        flash("Recipe doesn't exist", "error")
+        return redirect(url_for('weekly_plan'))
+    
+    # deserialise ingredients and method from SQL storage
+    recipe['ingredients'] = json.loads(recipe['ingredients'])
+    recipe['method'] = json.loads(recipe['method'])
+
+    return render_template("viewRecipe.html", recipe=recipe)
+
 
 @app.route("/login", methods=['GET', 'POST'])
 def login():
@@ -61,7 +83,7 @@ def login():
         
         session['user_id'] = userDb[0]['id']
         
-        return redirect("/")
+        return redirect("/plan")
 
     else:   # GET request
         return render_template("login.html")
@@ -243,11 +265,11 @@ def generate():
             db.execute('DELETE FROM recipes WHERE user_id=?', session['user_id'])
 
             # display users weekly recipe plan
-            return redirect("/") 
+            return redirect("/plan") 
 
         # user has selected their 7 recipes for the week, redirect to weekly plan
         if userDb_data[0]['methods_generated']:
-            return redirect("/")
+            return redirect("/plan")
         
         # if titles haven't been generated and the methods haven't been generated (both FALSE), generate 14 recipes
         elif not userDb_data[0]['titles_generated'] and not userDb_data[0]['methods_generated']:
@@ -363,3 +385,7 @@ def call_openai_api(prompt):
     else:
         flash('OpenAI API Error', 'error')
         return {"error": f"Request failed with status code {response.status_code}"}
+    
+
+def recipe_display():
+    return
