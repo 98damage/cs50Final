@@ -1,9 +1,8 @@
 import os
 import json
 from dotenv import load_dotenv
-from openai import OpenAI
 from cs50 import SQL
-from flask import Flask, flash, redirect, render_template, request, session, url_for, jsonify
+from flask import Flask, flash, redirect, render_template, request, session, url_for
 import requests
 from flask_session import Session
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -22,18 +21,22 @@ Session(app)
 
 db = SQL("sqlite:///beet.db")
 
-@app.route("/plan", methods=['GET', 'POST']) # HOMEPAGE (AFTER USER LOGS IN)
+
+@app.route("/plan", methods=['GET'])
 @login_required
 def weekly_plan():
     """Weekly Plan Once Logged In"""
+
+    methods_generated = db.execute('SELECT methods_generated FROM users WHERE id=?', session['user_id'])
+
+    if not methods_generated[0]['methods_generated']:
+        flash("No Recipes Currently Available, Please Generate/Select Recipes", "error")
+        return redirect(url_for('generate'))
+
     weeklyRecipeCards = db.execute('SELECT id, title, meal_type, cuisine FROM added_recipes WHERE user_id=?', 
                                session['user_id'])
-    
-    if request.method == 'POST':
-        return render_template("weeklyPlan.html")
-    
-    else:        
-        return render_template("weeklyPlan.html", weeklyRecipeCards=weeklyRecipeCards)
+        
+    return render_template("weeklyPlan.html", weeklyRecipeCards=weeklyRecipeCards)
     
 
 @app.route("/plan/recipe/<int:recipe_id>", methods=['GET'])
@@ -43,11 +46,11 @@ def view_recipe(recipe_id):
     recipe = db.execute('SELECT title, meal_type, cuisine, method, ingredients FROM added_recipes WHERE id=? AND user_id=?', 
                         recipe_id, session['user_id'])
     
-    if recipe:
-        recipe = recipe[0] # simplify keystrokes
-    elif not recipe:
+    if not recipe:
         flash("Recipe doesn't exist", "error")
         return redirect(url_for('weekly_plan'))
+    else:
+        recipe = recipe[0] # simplify keystrokes
     
     # deserialise ingredients and method from SQL storage
     recipe['ingredients'] = json.loads(recipe['ingredients'])
@@ -250,10 +253,6 @@ def generate():
             while recipe_methods is None or len(recipe_methods) == 0:
                 recipe_methods = generate_recipe_methods(recipe_list, survey_userData)
 
-            #print(recipe_methods[0])
-            #print(recipe_methods[0]['meal_type'])
-            #print(recipe_methods[0]['ingredients'])
-
             for recipe in recipe_methods:
                 method_json = json.dumps(recipe['method']) # convert lists to JSON fields for SQL DB
                 ingredients_json = json.dumps(recipe['ingredients'])
@@ -269,10 +268,11 @@ def generate():
 
         # user has selected their 7 recipes for the week, redirect to weekly plan
         if userDb_data[0]['methods_generated']:
-            return redirect("/plan")
+            db.execute('UPDATE users SET methods_generated=?', False)
+            db.execute('DELETE FROM added_recipes WHERE user_id=?', session['user_id'])
         
         # if titles haven't been generated and the methods haven't been generated (both FALSE), generate 14 recipes
-        elif not userDb_data[0]['titles_generated'] and not userDb_data[0]['methods_generated']:
+        if not userDb_data[0]['titles_generated'] and not userDb_data[0]['methods_generated']:
 
             recipes = generate_recipe_titles(survey_userData)
             
@@ -282,7 +282,6 @@ def generate():
                     db.execute('INSERT INTO recipes (title, meal_type, cuisine, user_id) VALUES(?,?,?,?)', 
                             recipe['title'], recipe['meal_type'], recipe['cuisine'], session['user_id'])
                 
-
                 # update users DB so that we know they have generated 14 recipes previously
                 userDb_data = db.execute('SELECT titles_generated, methods_generated FROM users WHERE id=?', session['user_id'])
                 recipes_db = db.execute('SELECT id, title, cuisine, meal_type FROM recipes WHERE user_id=?', session['user_id'])
@@ -291,11 +290,10 @@ def generate():
                 flash("Error generating recipes, try again", "error")
                 return redirect(url_for('generate'))
 
-        #methodIngredient_prompt = ("")
-
-        return render_template('generate.html')
+        return render_template('generate.html', userDb_data=userDb_data)
     
     else:
+        userDb_data = db.execute('SELECT titles_generated, methods_generated FROM users WHERE id=?', session['user_id'])
         recipes_db = db.execute('SELECT id, title, cuisine, meal_type FROM recipes WHERE user_id=?', session['user_id'])
         return render_template('generate.html', userDb_data=userDb_data, recipes_db=recipes_db)
         
@@ -385,7 +383,3 @@ def call_openai_api(prompt):
     else:
         flash('OpenAI API Error', 'error')
         return {"error": f"Request failed with status code {response.status_code}"}
-    
-
-def recipe_display():
-    return
