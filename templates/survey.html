@@ -12,7 +12,6 @@ Survey
     <div class="form-check text-start">
         <form action="{{ url_for('survey') }}" method="POST">
             <h3 class="m-1">Dietary Requirements</h3>
-            <!--<label for="dietaryReq">Dietary Requirements</label>-->
             {% for condition in dietary_requirements %}
             <label class="form-check-label fs-4 me-4 mb-2">
                 <input type="checkbox" id="{{ condition }}" name="dietaryChoices" value="{{ condition }}">

@@ -22,7 +22,7 @@ Session(app)
 db = SQL("sqlite:///beet.db")
 
 
-@app.route("/plan", methods=['GET'])
+@app.route("/", methods=['GET'])
 @login_required
 def weekly_plan():
     """Weekly Plan Once Logged In"""
@@ -39,7 +39,7 @@ def weekly_plan():
     return render_template("weeklyPlan.html", weeklyRecipeCards=weeklyRecipeCards)
     
 
-@app.route("/plan/recipe/<int:recipe_id>", methods=['GET'])
+@app.route("/recipe/<int:recipe_id>", methods=['GET'])
 @login_required
 def view_recipe(recipe_id):
 
@@ -86,7 +86,7 @@ def login():
         
         session['user_id'] = userDb[0]['id']
         
-        return redirect("/plan")
+        return redirect("/")
 
     else:   # GET request
         return render_template("login.html")
@@ -104,6 +104,7 @@ def logout():
 @app.route("/register", methods=['GET', 'POST'])
 def register():
     """User registers for an account"""
+    # does not handle for list injection into SQL DB which would result in error
 
     if request.method == 'POST': # user registers an account
 
@@ -130,7 +131,7 @@ def register():
 
         flash('Successfully Registered!', 'success')
 
-        return redirect(url_for('login')) # redirect user to SURVEY??? ############# FIX THIS #####################
+        return redirect(url_for('login'))
     
     else:
         return render_template("register.html")
@@ -264,7 +265,7 @@ def generate():
             db.execute('DELETE FROM recipes WHERE user_id=?', session['user_id'])
 
             # display users weekly recipe plan
-            return redirect("/plan") 
+            return redirect("/") 
 
         # user has selected their 7 recipes for the week, redirect to weekly plan
         if userDb_data[0]['methods_generated']:
@@ -353,7 +354,6 @@ def generate_recipe_methods(recipes_input, survey_userData):
     )
 
     try:
-        print("API call attempt")
         api_response = call_openai_api(method_prompt_input)
         recipes = json.loads(api_response['choices'][0]['message']['content'])
         db.execute('UPDATE users SET titles_generated=?, methods_generated=? WHERE id=?', False, True, session['user_id'])

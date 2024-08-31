@@ -10,23 +10,19 @@
     <link href="/static/styles.css" rel="stylesheet">
 
 
-    <title>{% block title %}{% endblock %}</title> <!-- ADD JINJA TO TITLE (CHANGES DEPENDING ON WHAT PAGE YOURE ON)-->
+    <title>{% block title %}{% endblock %}</title>
 </head>
 
 <header>
     <nav class="navbar sticky-top navbar-expand-lg" style="background-color: #1abc9c;">
         <div class="container-fluid">
-            <a class="navbar-brand h1" href="{{ url_for('weekly_plan') }}">
-                BEET
-            </a>
+            <a class="navbar-brand h1" href="{{ url_for('weekly_plan') }}">BEET</a>
             <div class="collapse navbar-collapse">
                 {% if session.get("user_id") %}
                 <div class="navbar-nav container-fluid">
                     <a class="nav-link active fs-4" aria-current="page" href="{{ url_for('weekly_plan') }}">Weekly Plan</a>
                     <!--active & aria-current will change depending on what page is selected-->
                     <a class="nav-link fs-4" href="{{ url_for('generate') }}">Generate Recipes</a>
-                    <!--WRITE SOME JS TO  MAKE 'active' & aria-current change <a> classes-->
-                    <!--ADD BURGER MENU BUTTON TO MAKE NAV COLLAPSABLE?-->
                 </div>
                 <div class="ms-auto container-fluid d-flex justify-content-end" style="margin-right: 100px;">
                     <a class="btn btn-primary btn-lg me-2" href="{{ url_for('logout') }}" type="button">Logout</a>

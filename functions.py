@@ -1,7 +1,6 @@
 import csv
 import datetime
 import pytz
-#import requests
 import urllib
 import uuid
 

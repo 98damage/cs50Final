@@ -58,11 +58,4 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     });
-
-    // Submit button logic can stay the same if you're submitting the form traditionally
-    // submitButton.addEventListener('click', function () {
-    //     const selectedRecipesArray = Array.from(selectedRecipes);
-    //     console.log('Selected recipes:', selectedRecipesArray);
-    //     // Handle the submission logic (e.g., AJAX request or form submission)
-    // });
 });
