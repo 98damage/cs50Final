@@ -11,7 +11,7 @@ Users are asked to fill out a survey which includes dietary information about th
 The program retrieves this survey information from the users which then feeds into the OpenAI API, the user is presented with a range of options for their meals for the week that are suited to their requirements. The user can select out of a list of recipes what they want to cook for the week. The program then displays the 7 recipes the user has chosen which the users can then click into each recipe to view
 the method and ingredients.
 
-User auth has been implemented, users can register for accounts, login and logout. Users can change their survey data anytime and generate new recipes anytime.
+User authentication has been implemented, users can register for accounts, login and logout. Users can change their survey data anytime and generate new recipes anytime.
 
 ### App.py:
 
@@ -76,6 +76,8 @@ This function runs the API call. The code for this was implemented using the Ope
 #### layout.html:
 
 Layout.html is the foundation of the frontend. It references Bootstrap JS and CSS classes. Every other .html file extends this file using jinja. This file places a navbar on every page in the webapp. The user can select to navigate to their weekly plan, generate recipes and they can, login, logout and check their account settings using links and buttons on the navbar. The body tags handle flashed messages and the main tags handle the other html files which extend layout.html.
+
+The code on lines 45 to 55 were also referencd from the PSET9/finance of the CS50 course.
 
 #### account.html:
 

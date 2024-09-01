@@ -86,7 +86,7 @@ def login():
         
         session['user_id'] = userDb[0]['id']
         
-        return redirect("/")
+        return redirect(url_for('generate'))
 
     else:   # GET request
         return render_template("login.html")
