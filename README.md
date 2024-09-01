@@ -1,6 +1,6 @@
 # BEET Recipe Generation
 
-#### Video Demo: <URL HERE>
+#### Video Demo: [<URL HERE>](https://www.youtube.com/watch?v=go4B81hnJd8)
 
 ## Description:
 
